@@ -176,6 +176,16 @@ impl TryFrom<CdnUrlMessage> for MaybeExpiringUrls {
                             let slice = &token.1[..end];
                             expiry_str = Some(String::from(&slice[..end]));
                         }
+                    } else if let Some(token) = url
+                        .query_pairs()
+                        .into_iter()
+                        .find(|(key, _value)| key == "verify")
+                    {
+                        // New Spotify CDN format: verify=timestamp-signature https://audio-cf.spotifycdn.com/audio/[hash]?verify=1754637587-PytIH%2FnTcNMqzeT110kF07r0Bu2Xfj1sxtTLorQREDQ%3D
+                        if let Some(dash_pos) = token.1.find('-') {
+                        let timestamp_str = &token.1[..dash_pos];
+                        expiry_str = Some(String::from(timestamp_str));
+                    }
                     } else if let Some(query) = url.query() {
                         //"https://audio4-fa.scdn.co/audio/4712bc9e47f7feb4ee3450ef2bb545e1d83c3d54?1688165560_0GKSyXjLaTW1BksFOyI4J7Tf9tZDbBUNNPu9Mt4mhH4=",
                         let mut items = query.split('_');
